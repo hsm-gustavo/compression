@@ -1,20 +1,8 @@
 package main
 
-import (
-	"os"
-)
+import "os"
 
-type Run struct {
-	Count byte
-	Value byte
-}
-
-func main() {
-	data, err := os.ReadFile("file.txt")
-	if err != nil {
-		panic(err)
-	}
-
+func compress(data []byte) {
 	if len(data) == 0 {
 		return
 	}
@@ -40,7 +28,25 @@ func main() {
 	// last one
 	runs = append(runs, currentCount, currentByte)
 
-	err = os.WriteFile("output.rle", runs, 0644)
+	err := os.WriteFile("output.rle", runs, 0644)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func decompress(data []byte) {
+
+}
+
+func main() {
+	data, err := os.ReadFile("file.txt")
+	if err != nil {
+		panic(err)
+	}
+
+	compress(data)
+
+	data, err = os.ReadFile("output.rle")
 	if err != nil {
 		panic(err)
 	}
