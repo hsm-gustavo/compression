@@ -41,7 +41,26 @@ func compress(data []byte) []byte {
 }
 
 func decompress(data []byte) []byte {
-	return []byte{}
+	if len(data) == 0 {
+		return []byte{}
+	}
+
+	if len(data)%2 != 0 {
+		panic("the compressed file should have pairs of bytes")
+	}
+
+	var runs []byte
+
+	limit := len(data)
+
+	for i := 0; i < limit; i += 2 {
+		count := data[i]
+		value := data[i+1]
+
+		runs = append(runs, bytes.Repeat([]byte{value}, int(count))...)
+	}
+
+	return runs
 }
 
 func main() {
@@ -54,5 +73,8 @@ func main() {
 
 	decompressed := decompress(compressed)
 
+	fmt.Println("Original: ", data)
+	fmt.Println("Compressed: ", compressed)
+	fmt.Println("Decompressed: ", decompressed)
 	fmt.Println(bytes.Equal(data, decompressed)) // should be true
 }
