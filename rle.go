@@ -1,10 +1,14 @@
 package main
 
-import "os"
+import (
+	"bytes"
+	"fmt"
+	"os"
+)
 
-func compress(data []byte) {
+func compress(data []byte) []byte {
 	if len(data) == 0 {
-		return
+		return []byte{}
 	}
 
 	// counting process
@@ -32,10 +36,12 @@ func compress(data []byte) {
 	if err != nil {
 		panic(err)
 	}
+
+	return runs
 }
 
-func decompress(data []byte) {
-
+func decompress(data []byte) []byte {
+	return []byte{}
 }
 
 func main() {
@@ -44,10 +50,9 @@ func main() {
 		panic(err)
 	}
 
-	compress(data)
+	compressed := compress(data)
 
-	data, err = os.ReadFile("output.rle")
-	if err != nil {
-		panic(err)
-	}
+	decompressed := decompress(compressed)
+
+	fmt.Println(bytes.Equal(data, decompressed)) // should be true
 }
