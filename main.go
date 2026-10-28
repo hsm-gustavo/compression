@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 
@@ -20,5 +21,5 @@ func main() {
 	fmt.Println("Original: ", data)
 	fmt.Println("Compressed: ", compressed)
 	fmt.Println("Decompressed: ", decompressed)
-	//fmt.Println(bytes.Equal(data, decompressed)) // should be true
+	fmt.Println(bytes.Equal(data, decompressed)) // should be true
 }
