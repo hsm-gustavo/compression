@@ -1,12 +1,11 @@
-package main
+package rle
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 )
 
-func compress(data []byte) []byte {
+func Compress(data []byte) []byte {
 	if len(data) == 0 {
 		return []byte{}
 	}
@@ -40,7 +39,7 @@ func compress(data []byte) []byte {
 	return runs
 }
 
-func decompress(data []byte) []byte {
+func Decompress(data []byte) []byte {
 	if len(data) == 0 {
 		return []byte{}
 	}
@@ -61,20 +60,4 @@ func decompress(data []byte) []byte {
 	}
 
 	return runs
-}
-
-func main() {
-	data, err := os.ReadFile("file.txt")
-	if err != nil {
-		panic(err)
-	}
-
-	compressed := compress(data)
-
-	decompressed := decompress(compressed)
-
-	fmt.Println("Original: ", data)
-	fmt.Println("Compressed: ", compressed)
-	fmt.Println("Decompressed: ", decompressed)
-	fmt.Println(bytes.Equal(data, decompressed)) // should be true
 }
