@@ -2,7 +2,6 @@ package rle_lit
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 )
 
@@ -113,14 +112,12 @@ func Decompress(data []byte) []byte {
 	var runs []Run
 
 	limit := len(data)
-	fmt.Println(data)
+
 	for i := 0; i < limit; i++ {
 		marker := data[i]
 		count := data[i+1]
 		var values []byte
-		fmt.Println("marker", marker)
-		fmt.Println("count", count)
-		fmt.Println(i+2, i+2+int(count))
+
 		if count <= 3 {
 			values = append(values, data[i+2:i+2+int(count)]...)
 			// i+2 = assumption that we are always ending this after the last value
@@ -146,7 +143,6 @@ func Decompress(data []byte) []byte {
 	}
 	output := make([]byte, 0, capacity)
 
-	fmt.Println("balright", runs)
 	for _, r := range runs {
 		if r.Count > 3 {
 			output = append(output, bytes.Repeat([]byte{r.Values[0]}, int(r.Count))...)
