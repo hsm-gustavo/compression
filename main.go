@@ -3,23 +3,18 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"os"
 
-	"github.com/hsm-gustavo/compression/rle_lit"
+	"github.com/hsm-gustavo/compression/files"
+	"github.com/hsm-gustavo/compression/rle"
 )
 
 func main() {
-	data, err := os.ReadFile("example.txt")
-	if err != nil {
-		panic(err)
-	}
+	compressed := rle.Compress(files.Lorem)
 
-	compressed := rle_lit.Compress(data)
+	decompressed := rle.Decompress(compressed)
 
-	decompressed := rle_lit.Decompress(compressed)
-
-	fmt.Println("Original: ", data)
+	fmt.Println("Original: ", files.Lorem)
 	fmt.Println("Compressed: ", compressed)
 	fmt.Println("Decompressed: ", decompressed)
-	fmt.Println(bytes.Equal(data, decompressed)) // should be true
+	fmt.Println(bytes.Equal(files.Lorem, decompressed)) // should be true
 }

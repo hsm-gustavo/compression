@@ -1,14 +1,51 @@
-package rle_lit
+package rle
 
 import (
 	"bytes"
-	"os"
 )
 
 type Run struct {
 	Marker byte   // 00 repeated 01 literal
 	Count  byte   // how many literal/how many reps
 	Values []byte // if repeated its a 1 value list, if literal its a list of values
+}
+
+/*
+ * idea: merge runs
+ * current implementation doesnt append diff literals,
+ * i gotta deal with that
+ *
+ * what it used to do: run1: lit(aaa), run2: lit(b)
+ * what it should do: run1 lit(aaab)
+ *
+ * they should be one
+ */
+func appendRun(runs []Run, run Run) []Run {
+	// if repeated just append
+	if run.Marker != 1 {
+		return append(runs, run)
+	}
+
+	// if no runs just append
+	if len(runs) == 0 {
+		return append(runs, run)
+	}
+
+	// get the last run
+	last := &runs[len(runs)-1]
+
+	// if the last run of the runs is literal and
+	// its count + the run count is less than or equal to
+	// 255 (its a byte so we have a limit of literals)
+	// last Values will be its values + the run values
+	// and its count will be increased by the run count
+	if last.Marker == 1 && int(last.Count)+int(run.Count) <= 255 {
+		last.Values = append(last.Values, run.Values...)
+		last.Count += run.Count
+		return runs
+	}
+
+	return append(runs, run)
 }
 
 func makeRun(count byte, values []byte) Run {
@@ -27,7 +64,7 @@ func makeRun(count byte, values []byte) Run {
 	return Run{
 		Marker: byte(1),
 		Count:  count,
-		Values: values,
+		Values: bytes.Clone(values),
 	}
 }
 
@@ -66,7 +103,7 @@ func Compress(data []byte) []byte {
 		start := idx + 1 - int(currentCount) // literal slice idx start
 		values := data[start : idx+1]
 
-		runs = append(runs, makeRun(currentCount, values))
+		runs = appendRun(runs, makeRun(currentCount, values))
 		currentByte = b
 		currentCount = 1
 	}
@@ -74,7 +111,7 @@ func Compress(data []byte) []byte {
 	// last one
 	start := len(data) - int(currentCount)
 	values := data[start:]
-	runs = append(runs, makeRun(currentCount, values))
+	runs = appendRun(runs, makeRun(currentCount, values))
 
 	/* err := os.WriteFile("output.rle", runs, 0644)
 	if err != nil {
@@ -96,11 +133,6 @@ func Compress(data []byte) []byte {
 		output = append(output, r.Values...)
 	}
 
-	err := os.WriteFile("output.rle", output, 0644)
-	if err != nil {
-		panic(err)
-	}
-
 	return output
 }
 
@@ -118,16 +150,19 @@ func Decompress(data []byte) []byte {
 		count := data[i+1]
 		var values []byte
 
-		if count <= 3 {
+		switch marker {
+		case 0:
+			values = append(values, data[i+2])
+			i += 3 - 1 // {marker count value marker ...} so indexes 0 1 2 3, we want to end the loop on a marker
+		// same as before, loop already adds 1 so we remove 1
+		case 1:
 			values = append(values, data[i+2:i+2+int(count)]...)
 			// i+2 = assumption that we are always ending this after the last value
 			// i + 2 + count = same as above, ends after the count, since its exclusive that value wont get in
 			// value is marker
 			i += 2 + int(count) - 1 // for loop already adds 1
-		} else {
-			values = append(values, data[i+2])
-			i += 3 - 1 // {marker count value marker ...} so indexes 0 1 2 3, we want to end the loop on a marker
-			// same as before, loop already adds 1 so we remove 1
+		default:
+			panic("invalid marker")
 		}
 
 		runs = append(runs, Run{
@@ -144,9 +179,10 @@ func Decompress(data []byte) []byte {
 	output := make([]byte, 0, capacity)
 
 	for _, r := range runs {
-		if r.Count > 3 {
+		switch r.Marker {
+		case 0:
 			output = append(output, bytes.Repeat([]byte{r.Values[0]}, int(r.Count))...)
-		} else {
+		case 1:
 			output = append(output, r.Values...)
 		}
 	}
