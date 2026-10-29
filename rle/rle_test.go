@@ -8,7 +8,7 @@ import (
 	"github.com/hsm-gustavo/compression/files"
 )
 
-func TestRLELit(t *testing.T) {
+func TestRLE(t *testing.T) {
 	inputs := [][]byte{
 		[]byte(""),
 		[]byte("A"),
@@ -25,12 +25,17 @@ func TestRLELit(t *testing.T) {
 
 		originalSize := len(input)
 		compressedSize := len(compressed)
-		ratio := float64(len(compressed)) / float64(len(input))
-		reductionPercent := (float64(1) - ratio) * 100
 
 		fmt.Println("Original size:", originalSize, "bytes")
 		fmt.Println("Compression size:", compressedSize, "bytes")
-		fmt.Printf("Reduction: %.2f%%\n", reductionPercent)
+
+		if originalSize > 0 {
+			ratio := float64(len(compressed)) / float64(len(input))
+			reductionPercent := (float64(1) - ratio) * 100
+			fmt.Printf("Reduction: %.2f%%\n", reductionPercent)
+		} else {
+			fmt.Println("Reduction: N/A")
+		}
 		if !bytes.Equal(input, decompressed) {
 			t.Errorf(
 				"round-trip failed for %q: got %q",
@@ -38,5 +43,35 @@ func TestRLELit(t *testing.T) {
 				decompressed,
 			)
 		}
+	}
+}
+
+func TestBinaryRLE(t *testing.T) {
+	input := []byte{
+		0x00, 0x00, 0x00, 0x00,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0x01, 0x02, 0x03,
+		0x00, 0x00,
+	}
+
+	compressed := Compress(input)
+	decompressed := Decompress(compressed)
+
+	originalSize := len(input)
+	compressedSize := len(compressed)
+
+	fmt.Println("Original size:", originalSize, "bytes")
+	fmt.Println("Compression size:", compressedSize, "bytes")
+
+	if originalSize > 0 {
+		ratio := float64(len(compressed)) / float64(len(input))
+		reductionPercent := (float64(1) - ratio) * 100
+		fmt.Printf("Reduction: %.2f%%\n", reductionPercent)
+	} else {
+		fmt.Println("Reduction: N/A")
+	}
+
+	if !bytes.Equal(input, decompressed) {
+		t.Fatal("binary round-trip failed")
 	}
 }
